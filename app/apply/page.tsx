@@ -70,9 +70,12 @@ const positions = [
 ];
 
 const programs = [
+  "Legal Management",
   "Computer Science",
   "Information Technology",
   "Computer Engineering",
+  "Biology",
+  
   "Multimedia Arts",
   "Marketing",
   "Communication Arts",
