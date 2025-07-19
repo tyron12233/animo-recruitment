@@ -116,24 +116,101 @@ export default function ApplicationPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Form validation functions
+  const validateStep1 = () => {
+    return (
+      formData.firstName.trim() !== "" &&
+      formData.lastName.trim() !== "" &&
+      formData.email.trim() !== ""
+    );
+  };
+
+  const validateStep2 = () => {
+    return (
+      formData.program !== "" &&
+      formData.yearLevel !== "" &&
+      formData.desiredPosition !== ""
+    );
+  };
+
+  const validateStep3 = () => {
+    return formData.whyJoin.trim() !== "" && formData.whatBring.trim() !== "";
+  };
+
+  const validateStep4 = () => {
+    return formData.agreeTerms;
+  };
+
+  const canProceedToNextStep = () => {
+    switch (currentStep) {
+      case 1:
+        return validateStep1();
+      case 2:
+        return validateStep2();
+      case 3:
+        return validateStep3();
+      case 4:
+        return validateStep4();
+      default:
+        return false;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate all steps before submitting
+    if (
+      !validateStep1() ||
+      !validateStep2() ||
+      !validateStep3() ||
+      !validateStep4()
+    ) {
+      toast({
+        title: "Incomplete Application",
+        description:
+          "Please ensure all required fields are filled out before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const payload = new URLSearchParams(
-        Object.entries(formData).map(([k, v]) => [k, String(v)])
-      );
+      // send as plain text
 
-      // Simulate form submission
-      const res = await fetch(SHEET_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: payload.toString(),
-      });
-      console.log(await res.text())
+      const request = new window.XMLHttpRequest();
+      request.open("POST", SHEET_URL, true);
+      request.setRequestHeader("Content-Type", "text/plain");
+      request.send(JSON.stringify(formData));
+
+      // callback
+      request.onload = () => {
+        if (request.status >= 200 && request.status < 300) {
+          toast({
+            title: "Application Submitted!",
+            description:
+              "Thank you for your interest in joining animo.dev. We'll review your application and get back to you soon.",
+          });
+
+          setIsSubmitting(false);
+          // Success
+          console.log(
+            "Application submitted successfully:",
+            request.responseText
+          );
+        } else {
+          // Error
+          console.error("Error submitting application:", request.statusText);
+          toast({
+            title: "Submission Error",
+            description:
+              "There was an error submitting your application. Please try again later.",
+            variant: "destructive",
+          });
+        }
+      };
     } catch (error) {
       console.error("Error submitting application:", error);
       toast({
@@ -154,7 +231,17 @@ export default function ApplicationPage() {
     setIsSubmitting(false);
   };
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 4));
+  const nextStep = () => {
+    if (canProceedToNextStep()) {
+      setCurrentStep((prev) => Math.min(prev + 1, 4));
+    } else {
+      toast({
+        title: "Incomplete Information",
+        description: "Please fill in all required fields before proceeding.",
+        variant: "destructive",
+      });
+    }
+  };
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const backgroundElements = useMemo(() => {
@@ -596,14 +683,21 @@ export default function ApplicationPage() {
                     <Button
                       type="button"
                       onClick={nextStep}
-                      className="bg-blue-500 hover:bg-blue-600 px-6 rounded-3xl"
+                      disabled={!canProceedToNextStep()}
+                      className="bg-blue-500 hover:bg-blue-600 px-6 rounded-3xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Next
                     </Button>
                   ) : (
                     <Button
                       type="submit"
-                      disabled={!formData.agreeTerms || isSubmitting}
+                      disabled={
+                        !validateStep1() ||
+                        !validateStep2() ||
+                        !validateStep3() ||
+                        !validateStep4() ||
+                        isSubmitting
+                      }
                       className="bg-green-600 hover:bg-green-700 px-8 rounded-3xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? (
