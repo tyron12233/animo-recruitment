@@ -343,7 +343,7 @@ export default function HomePage() {
           >
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed">
               Join animo.dev and be part of a dynamic team that's shaping the future of technology and innovation at{" "}
-              <span className="font-semibold text-green-600">De La Salle University</span>.
+              <span className="font-semibold text-green-600">De La Salle Lipa</span>.
             </p>
             <motion.div
               animate={{ y: [0, 10, 0] }}
