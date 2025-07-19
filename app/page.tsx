@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion, useScroll, useTransform, useSpring } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -54,6 +54,31 @@ export default function HomePage() {
 
   const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 }
   const x = useSpring(0, springConfig)
+
+  const floatingBackgrounds = useMemo(() => {
+    return [...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.1, 0.3, 0.1],
+            }}
+            transition={{
+              duration: 4 + Math.random() * 2,
+              repeat: Number.POSITIVE_INFINITY,
+              delay: Math.random() * 2,
+              ease: "easeInOut",
+            }}
+            className={`absolute w-1.5 h-1.5 rounded-full ${
+              ["bg-blue-500/20", "bg-red-500/20", "bg-green-500/20", "bg-yellow-500/20"][Math.floor(Math.random() * 4)]
+            }`}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+          />
+        ));
+  }, [])
 
   useEffect(() => {
     setMounted(true)
@@ -114,28 +139,7 @@ export default function HomePage() {
         />
 
         {/* Minimal floating elements */}
-        {[...Array(12)].map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.1, 0.3, 0.1],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 2,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 2,
-              ease: "easeInOut",
-            }}
-            className={`absolute w-1.5 h-1.5 rounded-full ${
-              ["bg-blue-500/20", "bg-red-500/20", "bg-green-500/20", "bg-yellow-500/20"][Math.floor(Math.random() * 4)]
-            }`}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          />
-        ))}
+        {floatingBackgrounds}
       </div>
 
       {/* Header */}
