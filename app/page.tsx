@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Users, Code, Palette, Star, ChevronDown, Sparkles } from "lucide-react"
 import Link from "next/link"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const positions = [
   {
@@ -45,26 +46,38 @@ const positions = [
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false)
+  const isMobile = useIsMobile()
   const { scrollY } = useScroll()
-  const y1 = useTransform(scrollY, [0, 1000], [0, -200])
-  const y2 = useTransform(scrollY, [0, 1000], [0, 200])
-  const y3 = useTransform(scrollY, [0, 1000], [0, -100])
-  const rotate = useTransform(scrollY, [0, 1000], [0, 360])
-  const scale = useTransform(scrollY, [0, 500], [1, 1.2])
+  
+  // Reduce scroll-based transforms on mobile for better performance
+  const y1 = useTransform(scrollY, [0, 1000], [0, isMobile ? -50 : -200])
+  const y2 = useTransform(scrollY, [0, 1000], [0, isMobile ? 50 : 200])
+  const y3 = useTransform(scrollY, [0, 1000], [0, isMobile ? -25 : -100])
+  const rotate = useTransform(scrollY, [0, 1000], [0, isMobile ? 180 : 360])
+  const scale = useTransform(scrollY, [0, 500], [1, isMobile ? 1.05 : 1.2])
 
-  const springConfig = { stiffness: 100, damping: 30, restDelta: 0.001 }
+  const springConfig = { stiffness: isMobile ? 50 : 100, damping: isMobile ? 40 : 30, restDelta: 0.001 }
   const x = useSpring(0, springConfig)
 
+  // Reduce floating elements on mobile and simplify animations
   const floatingBackgrounds = useMemo(() => {
-    return [...Array(12)].map((_, i) => (
+    const count = isMobile ? 4 : 12 // Fewer elements on mobile
+    return [...Array(count)].map((_, i) => (
           <motion.div
             key={i}
-            animate={{
-              y: [0, -20, 0],
-              opacity: [0.1, 0.3, 0.1],
-            }}
+            animate={isMobile ? 
+              // Simpler animation for mobile
+              {
+                opacity: [0.1, 0.2, 0.1],
+              } : 
+              // Full animation for desktop
+              {
+                y: [0, -20, 0],
+                opacity: [0.1, 0.3, 0.1],
+              }
+            }
             transition={{
-              duration: 4 + Math.random() * 2,
+              duration: isMobile ? 6 : 4 + Math.random() * 2, // Slower on mobile
               repeat: Number.POSITIVE_INFINITY,
               delay: Math.random() * 2,
               ease: "easeInOut",
@@ -78,7 +91,7 @@ export default function HomePage() {
             }}
           />
         ));
-  }, [])
+  }, [isMobile])
 
   useEffect(() => {
     setMounted(true)
@@ -90,53 +103,58 @@ export default function HomePage() {
     <div className="min-h-screen bg-white overflow-hidden relative"
       style={{
         fontFamily: 'Inter, sans-serif',
+        willChange: isMobile ? 'auto' : 'transform', // Optimize compositing for desktop
       }}
     >
-      {/* Google-style Background */}
+      {/* Google-style Background - Optimized for mobile */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* Google brand color floating shapes */}
+        {/* Google brand color floating shapes - Reduced complexity on mobile */}
         <motion.div
-          style={{ y: y1, rotate }}
-          className="absolute -top-32 -right-32 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"
+          style={{ y: y1, rotate: isMobile ? 0 : rotate }}
+          className={`absolute -top-32 -right-32 ${isMobile ? 'w-40 h-40' : 'w-80 h-80'} bg-blue-500/10 rounded-full ${isMobile ? 'blur-xl' : 'blur-3xl'}`}
         />
         <motion.div
           style={{ y: y2 }}
-          className="absolute top-1/4 -left-32 w-72 h-72 bg-red-500/10 rounded-full blur-3xl"
+          className={`absolute top-1/4 -left-32 ${isMobile ? 'w-36 h-36' : 'w-72 h-72'} bg-red-500/10 rounded-full ${isMobile ? 'blur-xl' : 'blur-3xl'}`}
         />
         <motion.div
-          style={{ y: y3, scale }}
-          className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-green-500/10 rounded-full blur-3xl"
+          style={{ y: y3, scale: isMobile ? 1 : scale }}
+          className={`absolute bottom-1/4 right-1/4 ${isMobile ? 'w-32 h-32' : 'w-64 h-64'} bg-green-500/10 rounded-full ${isMobile ? 'blur-xl' : 'blur-3xl'}`}
         />
         <motion.div
           style={{ y: y1 }}
-          className="absolute bottom-0 left-1/4 w-56 h-56 bg-yellow-500/10 rounded-full blur-3xl"
+          className={`absolute bottom-0 left-1/4 ${isMobile ? 'w-28 h-28' : 'w-56 h-56'} bg-yellow-500/10 rounded-full ${isMobile ? 'blur-xl' : 'blur-3xl'}`}
         />
 
-        {/* Subtle geometric elements */}
-        <motion.div
-          animate={{
-            rotate: [0, 360],
-            scale: [1, 1.05, 1],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-          className="absolute top-1/3 right-1/3 w-3 h-3 bg-blue-500/30 rotate-45"
-        />
-        <motion.div
-          animate={{
-            rotate: [360, 0],
-            y: [0, -15, 0],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-          className="absolute top-2/3 left-1/4 w-4 h-4 bg-red-500/25 rounded-full"
-        />
+        {/* Subtle geometric elements - Disabled on mobile for performance */}
+        {!isMobile && (
+          <>
+            <motion.div
+              animate={{
+                rotate: [0, 360],
+                scale: [1, 1.05, 1],
+              }}
+              transition={{
+                duration: 20,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "linear",
+              }}
+              className="absolute top-1/3 right-1/3 w-3 h-3 bg-blue-500/30 rotate-45"
+            />
+            <motion.div
+              animate={{
+                rotate: [360, 0],
+                y: [0, -15, 0],
+              }}
+              transition={{
+                duration: 15,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+              }}
+              className="absolute top-2/3 left-1/4 w-4 h-4 bg-red-500/25 rounded-full"
+            />
+          </>
+        )}
 
         {/* Minimal floating elements */}
         {floatingBackgrounds}
@@ -258,16 +276,23 @@ export default function HomePage() {
                   <span className="text-gray-900">LOOKING FOR</span>
                   <br />
                   <motion.span
-                    className="bg-gradient-to-r from-blue-600 via-red-500 via-yellow-500 to-green-600 bg-clip-text text-transparent"
-                    animate={{
-                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                    }}
-                    transition={{
-                      duration: 8,
-                      repeat: Number.POSITIVE_INFINITY,
-                      ease: "linear",
-                    }}
-                    style={{ backgroundSize: "200% 200%" }}
+                    className="bg-gradient-to-r from-blue-600 via-red-500 to-green-600 bg-clip-text text-transparent"
+                    animate={isMobile ? 
+                      // Disable gradient animation on mobile for performance
+                      {} : 
+                      {
+                        backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                      }
+                    }
+                    transition={isMobile ? 
+                      {} : 
+                      {
+                        duration: 8,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "linear",
+                      }
+                    }
+                    style={isMobile ? {} : { backgroundSize: "200% 200%" }}
                   >
                     OFFICERS!
                   </motion.span>
@@ -289,19 +314,22 @@ export default function HomePage() {
                       <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
                         initial={{ x: "-100%" }}
-                        animate={{ x: "100%" }}
-                        transition={{
-                          duration: 3,
-                          repeat: Number.POSITIVE_INFINITY,
-                          repeatDelay: 4,
-                          ease: "easeInOut",
-                        }}
+                        animate={isMobile ? {} : { x: "100%" }}
+                        transition={isMobile ? 
+                          {} : 
+                          {
+                            duration: 3,
+                            repeat: Number.POSITIVE_INFINITY,
+                            repeatDelay: 4,
+                            ease: "easeInOut",
+                          }
+                        }
                       />
                       <span className="relative z-10 flex items-center">
                         APPLY NOW
                         <motion.div
-                          animate={{ x: [0, 4, 0] }}
-                          transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+                          animate={isMobile ? {} : { x: [0, 4, 0] }}
+                          transition={isMobile ? {} : { duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
                         >
                           <ArrowRight className="ml-2 sm:ml-3 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                         </motion.div>
@@ -450,30 +478,35 @@ export default function HomePage() {
       {/* Enhanced CTA Section */}
       <section className="relative z-10 py-16 sm:py-20 lg:py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-green-600">
-          <motion.div
-            animate={{
-              scale: [1, 1.1, 1],
-              rotate: [0, 90, 180],
-            }}
-            transition={{
-              duration: 25,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "linear",
-            }}
-            className="absolute top-10 right-10 w-24 h-24 sm:w-32 sm:h-32 bg-white/5 rounded-full blur-2xl"
-          />
-          <motion.div
-            animate={{
-              scale: [1.1, 1, 1.1],
-              x: [0, 30, 0],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "easeInOut",
-            }}
-            className="absolute bottom-10 left-10 w-20 h-20 sm:w-24 sm:h-24 bg-white/5 rounded-full blur-2xl"
-          />
+          {/* Disable complex animations on mobile for performance */}
+          {!isMobile && (
+            <>
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 90, 180],
+                }}
+                transition={{
+                  duration: 25,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "linear",
+                }}
+                className="absolute top-10 right-10 w-24 h-24 sm:w-32 sm:h-32 bg-white/5 rounded-full blur-2xl"
+              />
+              <motion.div
+                animate={{
+                  scale: [1.1, 1, 1.1],
+                  x: [0, 30, 0],
+                }}
+                transition={{
+                  duration: 20,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                }}
+                className="absolute bottom-10 left-10 w-20 h-20 sm:w-24 sm:h-24 bg-white/5 rounded-full blur-2xl"
+              />
+            </>
+          )}
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 text-center relative z-10">
@@ -492,14 +525,17 @@ export default function HomePage() {
             >
               Ready to Make an{" "}
               <motion.span
-                animate={{
-                  textShadow: [
-                    "0 0 20px rgba(255,255,255,0.3)",
-                    "0 0 30px rgba(255,255,255,0.5)",
-                    "0 0 20px rgba(255,255,255,0.3)",
-                  ],
-                }}
-                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY }}
+                animate={isMobile ? 
+                  {} : 
+                  {
+                    textShadow: [
+                      "0 0 20px rgba(255,255,255,0.3)",
+                      "0 0 30px rgba(255,255,255,0.5)",
+                      "0 0 20px rgba(255,255,255,0.3)",
+                    ],
+                  }
+                }
+                transition={isMobile ? {} : { duration: 3, repeat: Number.POSITIVE_INFINITY }}
               >
                 Impact?
               </motion.span>
@@ -532,19 +568,22 @@ export default function HomePage() {
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200/50 to-transparent"
                     initial={{ x: "-100%" }}
-                    animate={{ x: "100%" }}
-                    transition={{
-                      duration: 3,
-                      repeat: Number.POSITIVE_INFINITY,
-                      repeatDelay: 5,
-                      ease: "easeInOut",
-                    }}
+                    animate={isMobile ? {} : { x: "100%" }}
+                    transition={isMobile ? 
+                      {} : 
+                      {
+                        duration: 3,
+                        repeat: Number.POSITIVE_INFINITY,
+                        repeatDelay: 5,
+                        ease: "easeInOut",
+                      }
+                    }
                   />
                   <span className="relative z-10 flex items-center">
                     Start Your Application
                     <motion.div
-                      animate={{ x: [0, 6, 0] }}
-                      transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+                      animate={isMobile ? {} : { x: [0, 6, 0] }}
+                      transition={isMobile ? {} : { duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
                     >
                       <ArrowRight className="ml-2 sm:ml-3 w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                     </motion.div>
