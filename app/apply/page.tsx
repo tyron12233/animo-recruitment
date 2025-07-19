@@ -5,6 +5,7 @@ import type React from "react";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,6 +94,7 @@ const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
 const SHEET_URL = `https://script.google.com/macros/s/AKfycbyQ6JjPlJIW7EaoKxom42BQt2LaWoPlP0czy1EmBO_6FTX_c-owTeJTlq1Equ6l9URUQg/exec`;
 
 export default function ApplicationPage() {
+  const isMobile = useIsMobile()
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -263,16 +265,24 @@ export default function ApplicationPage() {
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const backgroundElements = useMemo(() => {
-    return [...Array(15)].map((_, i) => (
+    const count = isMobile ? 6 : 15 // Fewer elements on mobile
+    return [...Array(count)].map((_, i) => (
       <motion.div
         key={i}
-        animate={{
-          y: [0, -40, 0],
-          rotate: [0, 180, 360],
-          opacity: [0.1, 0.3, 0.1],
-        }}
+        animate={isMobile ? 
+          // Simpler animation for mobile
+          {
+            opacity: [0.1, 0.2, 0.1],
+          } : 
+          // Full animation for desktop
+          {
+            y: [0, -40, 0],
+            rotate: [0, 180, 360],
+            opacity: [0.1, 0.3, 0.1],
+          }
+        }
         transition={{
-          duration: 8 + Math.random() * 4,
+          duration: isMobile ? 10 : 8 + Math.random() * 4, // Slower on mobile
           repeat: Number.POSITIVE_INFINITY,
           delay: Math.random() * 3,
           ease: "easeInOut",
@@ -292,7 +302,7 @@ export default function ApplicationPage() {
         }}
       />
     ));
-  }, []);
+  }, [isMobile]);
 
   const stepVariants = {
     hidden: { opacity: 0, x: 50 },
@@ -305,45 +315,67 @@ export default function ApplicationPage() {
       className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/30 relative overflow-hidden"
       style={{
         font: "Inter, sans-serif",
+        willChange: isMobile ? 'auto' : 'transform', // Optimize compositing for desktop
       }}
     >
-      {/* Enhanced Google-style background */}
+      {/* Enhanced Google-style background - Optimized for mobile */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <motion.div
-          animate={{
-            rotate: [0, 360],
-            scale: [1, 1.2, 1],
-          }}
+          animate={isMobile ? 
+            // Simpler animation for mobile
+            {
+              scale: [1, 1.05, 1],
+            } : 
+            // Full animation for desktop
+            {
+              rotate: [0, 360],
+              scale: [1, 1.2, 1],
+            }
+          }
           transition={{
-            duration: 25,
+            duration: isMobile ? 30 : 25, // Slower on mobile
             repeat: Number.POSITIVE_INFINITY,
             ease: "linear",
           }}
-          className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-blue-600/10 rounded-full blur-3xl"
+          className={`absolute top-20 right-20 ${isMobile ? 'w-32 h-32' : 'w-64 h-64'} bg-gradient-to-br from-blue-400/10 to-blue-600/10 rounded-full ${isMobile ? 'blur-xl' : 'blur-3xl'}`}
         />
         <motion.div
-          animate={{
-            y: [0, -50, 0],
-            x: [0, 30, 0],
-          }}
+          animate={isMobile ? 
+            // Simpler animation for mobile
+            {
+              y: [0, -20, 0],
+            } : 
+            // Full animation for desktop
+            {
+              y: [0, -50, 0],
+              x: [0, 30, 0],
+            }
+          }
           transition={{
-            duration: 20,
+            duration: isMobile ? 25 : 20, // Slower on mobile
             repeat: Number.POSITIVE_INFINITY,
             ease: "easeInOut",
           }}
-          className="absolute bottom-32 left-20 w-48 h-48 bg-gradient-to-br from-green-400/10 to-green-600/10 rounded-full blur-3xl"
+          className={`absolute bottom-32 left-20 ${isMobile ? 'w-24 h-24' : 'w-48 h-48'} bg-gradient-to-br from-green-400/10 to-green-600/10 rounded-full ${isMobile ? 'blur-xl' : 'blur-3xl'}`}
         />
         <motion.div
-          animate={{
-            rotate: [360, 0],
-            scale: [1.1, 1, 1.1],
-          }}
+          animate={isMobile ? 
+            // Simpler animation for mobile
+            {
+              scale: [1, 1.05, 1],
+            } : 
+            // Full animation for desktop
+            {
+              rotate: [360, 0],
+              scale: [1.1, 1, 1.1],
+            }
+          }
           transition={{
-            duration: 18,
+            duration: isMobile ? 22 : 18, // Slower on mobile
             repeat: Number.POSITIVE_INFINITY,
             ease: "easeInOut",
           }}
-          className="absolute top-1/2 left-1/2 w-32 h-32 bg-gradient-to-br from-red-400/10 to-red-600/10 rounded-full blur-2xl"
+          className={`absolute top-1/2 left-1/2 ${isMobile ? 'w-16 h-16' : 'w-32 h-32'} bg-gradient-to-br from-red-400/10 to-red-600/10 rounded-full ${isMobile ? 'blur-lg' : 'blur-2xl'}`}
         />
 
         {/* Floating geometric shapes */}
@@ -720,12 +752,15 @@ export default function ApplicationPage() {
                     >
                       {isSubmitting ? (
                         <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{
-                            duration: 1,
-                            repeat: Number.POSITIVE_INFINITY,
-                            ease: "linear",
-                          }}
+                          animate={isMobile ? {} : { rotate: 360 }}
+                          transition={isMobile ? 
+                            {} : 
+                            {
+                              duration: 1,
+                              repeat: Number.POSITIVE_INFINITY,
+                              ease: "linear",
+                            }
+                          }
                           className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
                         />
                       ) : (
