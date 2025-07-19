@@ -222,6 +222,8 @@ export default function ApplicationPage() {
       return;
     }
 
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     toast({
       title: "Application Submitted!",
       description:
