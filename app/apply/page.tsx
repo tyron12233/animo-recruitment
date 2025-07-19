@@ -230,6 +230,22 @@ export default function ApplicationPage() {
         "Thank you for your interest in joining animo.dev. We'll review your application and get back to you soon.",
     });
 
+    // Reset form data
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      program: "",
+      yearLevel: "",
+      desiredPosition: "",
+      whyJoin: "",
+      whatBring: "",
+      experience: "",
+      availability: "",
+      portfolio: "",
+      agreeTerms: false,
+    });
     setIsSubmitting(false);
   };
 
